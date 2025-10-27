@@ -17,7 +17,6 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
-import ToastContainer from '@/components/ui/ToastContainer';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { getInitials } from '@/lib/utils';
 import BrandLogo from '@/components/layout/BrandLogo';
@@ -222,7 +221,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </main>
       </div>
-      <ToastContainer position="top-right" />
     </div>
     </NotificationProvider>
   );

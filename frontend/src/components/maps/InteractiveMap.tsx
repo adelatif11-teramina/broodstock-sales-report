@@ -318,27 +318,6 @@ export default function InteractiveMap({ timeRange = '30d', className = '' }: In
         .setLngLat([customer.longitude, customer.latitude])
         .addTo(map.current!);
 
-      // Create popup
-      const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
-        <div style="padding: 12px; min-width: 220px; font-family: 'Source Sans 3', sans-serif;">
-          <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #1b2554;">${customer.name}</h3>
-          <div style="font-size: 12px; color: #5a638b; margin-bottom: 10px;">
-            ${customer.city}, ${customer.country}
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
-            <div><strong>Revenue:</strong><br />${formatCurrency(customer.revenue)}</div>
-            <div><strong>Orders:</strong><br />${customer.orderCount}</div>
-            <div><strong>Tier:</strong><br />${customer.customerTier}</div>
-            <div><strong>Last Order:</strong><br />${new Date(customer.lastOrderDate).toLocaleDateString()}</div>
-          </div>
-        </div>
-      `);
-
-      // Add click event
-      el.addEventListener('click', () => {
-        popup.addTo(map.current!);
-      });
-
       markers.push(marker);
     });
 
