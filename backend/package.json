@@ -24,8 +24,7 @@
     "format:check": "prettier --check src/**/*.ts",
     "typecheck": "tsc --noEmit",
     "audit": "npm audit --audit-level=high",
-    "audit:fix": "npm audit fix",
-    "prestart": "npm run build"
+    "audit:fix": "npm audit fix"
   },
   "keywords": [],
   "author": "",
