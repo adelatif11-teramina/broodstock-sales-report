@@ -30,10 +30,10 @@ export const testConnection = async (): Promise<void> => {
     const client = await pool.connect();
     console.log('✅ Database connected successfully');
     
-    // Test PostGIS extension
-    const result = await client.query('SELECT PostGIS_Version()');
+    // Test basic database functionality
+    const result = await client.query('SELECT NOW() as current_time');
     if (result.rows.length > 0) {
-      console.log('✅ PostGIS extension available:', result.rows[0].postgis_version);
+      console.log('✅ Database query test successful:', result.rows[0].current_time);
     }
     
     client.release();
