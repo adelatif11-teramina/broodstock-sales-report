@@ -16,6 +16,7 @@ import orderRoutes from './routes/orders';
 import broodstockBatchRoutes from './routes/broodstockBatches';
 import geocodingRoutes from './routes/geocoding';
 import businessRoutes from './routes/business';
+import settingsRoutes from './routes/settings';
 
 const app = express();
 
@@ -86,6 +87,7 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/broodstock-batches', broodstockBatchRoutes);
 app.use('/api/v1/geocoding', geocodingRoutes);
 app.use('/api/v1/business', businessRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {
