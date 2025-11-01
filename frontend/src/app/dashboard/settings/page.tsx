@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User, Shield, Bell, Globe, Database, Key, Save, Eye, EyeOff } from 'lucide-react';
 import { profileAPI, passwordAPI, notificationsAPI, systemAPI } from '../../../services/settings';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'system'>('profile');
@@ -185,7 +186,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -503,6 +505,7 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
