@@ -3,7 +3,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 // Get JWT token from localStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
+    return localStorage.getItem('accessToken');
   }
   return null;
 };
