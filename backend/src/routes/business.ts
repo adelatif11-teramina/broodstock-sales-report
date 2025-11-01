@@ -163,8 +163,8 @@ router.get('/revenue-analytics', asyncHandler(async (req: AuthenticatedRequest, 
 router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const querySchema = z.object({
     bounds: z.string().optional(), // "lat1,lng1,lat2,lng2" format for map bounds
-    zoom: z.number().optional(),
-    limit: z.number().min(1).max(1000).default(100),
+    zoom: z.coerce.number().optional(),
+    limit: z.coerce.number().min(1).max(1000).default(100),
   });
 
   const query = querySchema.parse(req.query);
