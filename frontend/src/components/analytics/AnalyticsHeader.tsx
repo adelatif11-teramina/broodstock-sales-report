@@ -87,8 +87,9 @@ export default function AnalyticsHeader({
 
           {/* Compare Mode Toggle */}
           <div className="flex items-center space-x-2">
-            <label className="flex items-center cursor-pointer">
+            <label htmlFor="compareMode" className="flex items-center cursor-pointer">
               <input
+                id="compareMode"
                 type="checkbox"
                 checked={compareMode}
                 onChange={(e) => onCompareModeChange(e.target.checked)}

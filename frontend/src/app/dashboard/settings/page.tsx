@@ -386,8 +386,9 @@ export default function SettingsPage() {
                     <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
                     <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label htmlFor="twoFactorEnabled" className="relative inline-flex items-center cursor-pointer">
                     <input
+                      id="twoFactorEnabled"
                       type="checkbox"
                       checked={formData.twoFactorEnabled}
                       onChange={(e) => handleInputChange('twoFactorEnabled', e.target.checked)}
@@ -417,8 +418,9 @@ export default function SettingsPage() {
                       <h4 className="font-medium text-gray-900">{item.label}</h4>
                       <p className="text-sm text-gray-600">{item.description}</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <label htmlFor={item.key} className="relative inline-flex items-center cursor-pointer">
                       <input
+                        id={item.key}
                         type="checkbox"
                         checked={formData[item.key as keyof typeof formData] as boolean}
                         onChange={(e) => handleInputChange(item.key, e.target.checked)}
@@ -476,8 +478,9 @@ export default function SettingsPage() {
                   <h4 className="font-medium text-gray-900">API Access</h4>
                   <p className="text-sm text-gray-600">Allow third-party applications to access your data</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label htmlFor="apiAccess" className="relative inline-flex items-center cursor-pointer">
                   <input
+                    id="apiAccess"
                     type="checkbox"
                     checked={formData.apiAccess}
                     onChange={(e) => handleInputChange('apiAccess', e.target.checked)}
