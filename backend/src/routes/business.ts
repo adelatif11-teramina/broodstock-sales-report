@@ -235,7 +235,7 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
   let filteredLocations = customerLocations;
   if (query.bounds) {
     const [lat1, lng1, lat2, lng2] = query.bounds.split(',').map(Number);
-    filteredLocations = customerLocations.filter(location => 
+    filteredLocations = customerLocations.filter((location: any) => 
       location.latitude >= Math.min(lat1, lat2) &&
       location.latitude <= Math.max(lat1, lat2) &&
       location.longitude >= Math.min(lng1, lng2) &&
@@ -251,9 +251,9 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
       locations: filteredLocations,
       summary: {
         totalCustomers: filteredLocations.length,
-        totalRevenue: filteredLocations.reduce((sum, loc) => sum + loc.revenue, 0),
-        totalOrders: filteredLocations.reduce((sum, loc) => sum + loc.orderCount, 0),
-        credentialIssues: filteredLocations.filter(loc => loc.credentialStatus !== 'valid').length,
+        totalRevenue: filteredLocations.reduce((sum: number, loc: any) => sum + loc.revenue, 0),
+        totalOrders: filteredLocations.reduce((sum: number, loc: any) => sum + loc.orderCount, 0),
+        credentialIssues: filteredLocations.filter((loc: any) => loc.credentialStatus !== 'valid').length,
       },
       lastUpdated: new Date().toISOString(),
     },
