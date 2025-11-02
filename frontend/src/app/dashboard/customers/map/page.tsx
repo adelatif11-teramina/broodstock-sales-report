@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import CustomerMap from '@/components/customers/CustomerMap';
 
 function CustomerMapPage() {
+  // Force Railway redeploy to pick up NEXT_PUBLIC_API_URL environment variable
   const handleNewOrder = (customerId: string) => {
     console.log('Creating new order for customer:', customerId);
     // Here you would navigate to order creation with pre-filled customer
