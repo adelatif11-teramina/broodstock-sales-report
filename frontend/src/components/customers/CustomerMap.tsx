@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api';
 import {
   Filter,
   MapPin,
@@ -83,69 +85,71 @@ const MemoizedMapContainer = React.memo(function MemoizedMapContainer({
                   </span>
                 </div>
 
-                {/* Metrics */}
-                <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-                  <div>
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Last Order
-                    </div>
-                    <div className="font-medium">
-                      {customer.lastOrderDate ? format(customer.lastOrderDate, 'MMM dd, yyyy') : 'Never'}
-                    </div>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex items-center">
+                    <Package className="h-3 w-3 text-blue-500 mr-1" />
+                    <span className="text-xs text-gray-600">{customer.totalOrders} orders</span>
                   </div>
-                  <div>
-                    <div className="flex items-center text-gray-600">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      Total Value
-                    </div>
-                    <div className="font-medium">${customer.totalValue.toLocaleString()}</div>
+                  <div className="flex items-center">
+                    <DollarSign className="h-3 w-3 text-green-500 mr-1" />
+                    <span className="text-xs text-gray-600">${customer.totalValue.toLocaleString()}</span>
                   </div>
-                  <div>
-                    <div className="flex items-center text-gray-600">
-                      <Package className="h-3 w-3 mr-1" />
-                      Orders
-                    </div>
-                    <div className="font-medium">{customer.totalOrders}</div>
-                  </div>
-                  <div>
-                    <div className="flex items-center text-gray-600">
-                      <Shield className="h-3 w-3 mr-1" />
-                      Credentials
-                    </div>
-                    <div className="font-medium">{getCredentialSummary(customer)}</div>
-                  </div>
-                </div>
-
-                {/* Contact */}
-                <div className="mb-3 text-sm">
-                  <div className="font-medium text-gray-900 mb-1">{customer.primaryContactName}</div>
-                  <div className="flex items-center space-x-3 text-gray-600">
-                    <span className="flex items-center">
-                      <Phone className="h-3 w-3 mr-1" />
-                      {customer.primaryContactPhone}
+                  <div className="flex items-center">
+                    <Calendar className="h-3 w-3 text-purple-500 mr-1" />
+                    <span className="text-xs text-gray-600">
+                      {customer.lastOrderDate ? format(customer.lastOrderDate, 'MMM dd') : 'No orders'}
                     </span>
-                    <span className="flex items-center">
-                      <Mail className="h-3 w-3 mr-1" />
-                      {customer.email}
+                  </div>
+                  <div className="flex items-center">
+                    {customer.credentials.length > 0 && customer.credentials[0].status === 'valid' ? (
+                      <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                    ) : customer.credentials.length > 0 && customer.credentials[0].status === 'expiring' ? (
+                      <AlertTriangle className="h-3 w-3 text-yellow-500 mr-1" />
+                    ) : (
+                      <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                    )}
+                    <span className="text-xs text-gray-600">
+                      {customer.credentials.length > 0 ? customer.credentials[0].status : 'No creds'}
                     </span>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex space-x-2">
+                {/* Contact Info */}
+                <div className="border-t pt-3 mb-3">
+                  <div className="flex items-center mb-1">
+                    <Users className="h-3 w-3 text-gray-400 mr-1" />
+                    <span className="text-xs text-gray-600">{customer.primaryContactName}</span>
+                  </div>
+                  {customer.primaryContactPhone && (
+                    <div className="flex items-center mb-1">
+                      <Phone className="h-3 w-3 text-gray-400 mr-1" />
+                      <span className="text-xs text-gray-600">{customer.primaryContactPhone}</span>
+                    </div>
+                  )}
+                  {customer.email && (
+                    <div className="flex items-center">
+                      <Mail className="h-3 w-3 text-gray-400 mr-1" />
+                      <span className="text-xs text-gray-600">{customer.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-2">
                   <Button 
                     size="sm" 
-                    className="flex-1"
                     onClick={() => onNewOrder?.(customer.id)}
+                    className="text-xs"
                   >
                     <Plus className="h-3 w-3 mr-1" />
-                    New Order
+                    Order
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => onViewProfile?.(customer.id)}
+                    className="text-xs"
                   >
                     <Eye className="h-3 w-3 mr-1" />
                     Profile
@@ -244,268 +248,67 @@ const CustomerMap = React.memo(function CustomerMap({ onNewOrder, onViewProfile,
     }
   }, []);
 
-  // Indonesian aquaculture customers data
-  const customers: Customer[] = useMemo(() => [
-    {
-      id: 'CUST-001',
-      name: 'PT Aquafarm Nusantara',
-      primaryContactName: 'Budi Santoso',
-      primaryContactPhone: '+62-21-8520-3456',
-      email: 'budi@aquafarmnusantara.id',
-      addressText: 'Jl. Gatot Subroto No. 45, Jakarta Selatan',
-      latitude: -6.2088,
-      longitude: 106.8456,
-      country: 'Indonesia',
-      province: 'DKI Jakarta',
-      district: 'Jakarta Selatan',
-      credentials: [
-        { id: 'C1', type: 'Surat Izin Usaha Perikanan', status: 'valid' },
-        { id: 'C2', type: 'AMDAL Certificate', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 18,
-      totalValue: 245000,
-      lastOrderDate: new Date('2024-03-15'),
-      averageOrderValue: 13611,
-      paymentHistory: 'excellent',
-      recentSpecies: ['Penaeus vannamei', 'Penaeus monodon']
-    },
-    {
-      id: 'CUST-002',
-      name: 'CV Udang Jaya Surabaya',
-      primaryContactName: 'Siti Rahayu',
-      primaryContactPhone: '+62-31-567-8901',
-      email: 'siti@udangjaya.co.id',
-      addressText: 'Jl. Raya Kenjeran No. 123, Surabaya',
-      latitude: -7.2575,
-      longitude: 112.7521,
-      country: 'Indonesia',
-      province: 'Jawa Timur',
-      district: 'Surabaya',
-      credentials: [
-        { id: 'C3', type: 'Izin Usaha Mikro Kecil', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 12,
-      totalValue: 89500,
-      lastOrderDate: new Date('2024-03-08'),
-      averageOrderValue: 7458,
-      paymentHistory: 'good',
-      recentSpecies: ['Penaeus vannamei']
-    },
-    {
-      id: 'CUST-003',
-      name: 'PT Shrimp Indonesia Sejahtera',
-      primaryContactName: 'Agus Wijaya',
-      primaryContactPhone: '+62-361-234-5678',
-      email: 'agus@shrimpindonesia.id',
-      addressText: 'Jl. Bypass Ngurah Rai, Denpasar, Bali',
-      latitude: -8.6500,
-      longitude: 115.2167,
-      country: 'Indonesia',
-      province: 'Bali',
-      district: 'Denpasar',
-      credentials: [
-        { id: 'C4', type: 'Surat Izin Usaha Perikanan', status: 'expiring' },
-        { id: 'C5', type: 'Halal Certificate', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 15,
-      totalValue: 156000,
-      lastOrderDate: new Date('2024-02-28'),
-      averageOrderValue: 10400,
-      paymentHistory: 'excellent',
-      recentSpecies: ['Penaeus monodon', 'Penaeus vannamei']
-    },
-    {
-      id: 'CUST-004',
-      name: 'Tambak Windu Lampung',
-      primaryContactName: 'Dedi Kurniawan',
-      primaryContactPhone: '+62-721-456-7890',
-      email: 'dedi@tambakwindu.id',
-      addressText: 'Jl. Soekarno-Hatta KM 15, Bandar Lampung',
-      latitude: -5.3971,
-      longitude: 105.2668,
-      country: 'Indonesia',
-      province: 'Lampung',
-      district: 'Bandar Lampung',
-      credentials: [
-        { id: 'C6', type: 'SIUP Perikanan', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 8,
-      totalValue: 67500,
-      lastOrderDate: new Date('2024-03-12'),
-      averageOrderValue: 8437,
-      paymentHistory: 'good',
-      recentSpecies: ['Penaeus monodon']
-    },
-    {
-      id: 'CUST-005',
-      name: 'PT Aqua Marine Medan',
-      primaryContactName: 'Rahman Hakim',
-      primaryContactPhone: '+62-61-789-0123',
-      email: 'rahman@aquamarine-medan.co.id',
-      addressText: 'Jl. Sisingamangaraja No. 88, Medan',
-      latitude: 3.5952,
-      longitude: 98.6722,
-      country: 'Indonesia',
-      province: 'Sumatera Utara',
-      district: 'Medan',
-      credentials: [
-        { id: 'C7', type: 'Izin Lingkungan', status: 'expired' }
-      ],
-      status: 'paused',
-      totalOrders: 5,
-      totalValue: 38000,
-      lastOrderDate: new Date('2023-11-20'),
-      averageOrderValue: 7600,
-      paymentHistory: 'fair',
-      recentSpecies: ['Penaeus vannamei']
-    },
-    {
-      id: 'CUST-006',
-      name: 'Koperasi Udang Makassar',
-      primaryContactName: 'Andi Mappaseng',
-      primaryContactPhone: '+62-411-345-6789',
-      email: 'andi@kopeudang-makassar.id',
-      addressText: 'Jl. AP Pettarani No. 67, Makassar',
-      latitude: -5.1477,
-      longitude: 119.4327,
-      country: 'Indonesia',
-      province: 'Sulawesi Selatan',
-      district: 'Makassar',
-      credentials: [
-        { id: 'C8', type: 'Akta Koperasi', status: 'valid' },
-        { id: 'C9', type: 'SIUP Koperasi', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 10,
-      totalValue: 92000,
-      lastOrderDate: new Date('2024-03-05'),
-      averageOrderValue: 9200,
-      paymentHistory: 'excellent',
-      recentSpecies: ['Penaeus japonicus', 'Penaeus vannamei']
-    },
-    {
-      id: 'CUST-007',
-      name: 'PT Bahari Sejahtera Pontianak',
-      primaryContactName: 'Yusuf Hartono',
-      primaryContactPhone: '+62-561-234-5678',
-      email: 'yusuf@baharisejahtera.id',
-      addressText: 'Jl. Ahmad Yani No. 156, Pontianak',
-      latitude: -0.0263,
-      longitude: 109.3425,
-      country: 'Indonesia',
-      province: 'Kalimantan Barat',
-      district: 'Pontianak',
-      credentials: [
-        { id: 'C10', type: 'Izin Usaha Perikanan', status: 'expiring' }
-      ],
-      status: 'active',
-      totalOrders: 6,
-      totalValue: 45000,
-      lastOrderDate: new Date('2024-01-18'),
-      averageOrderValue: 7500,
-      paymentHistory: 'good',
-      recentSpecies: ['Penaeus monodon']
-    },
-    {
-      id: 'CUST-008',
-      name: 'Tambak Benur Aceh',
-      primaryContactName: 'Cut Nyak Dien',
-      primaryContactPhone: '+62-651-567-8901',
-      email: 'cutnyak@tambakbenur-aceh.id',
-      addressText: 'Jl. Teuku Umar No. 234, Banda Aceh',
-      latitude: 5.5577,
-      longitude: 95.3222,
-      country: 'Indonesia',
-      province: 'Aceh',
-      district: 'Banda Aceh',
-      credentials: [
-        { id: 'C11', type: 'Surat Izin Khusus', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 4,
-      totalValue: 28000,
-      lastOrderDate: new Date('2024-02-14'),
-      averageOrderValue: 7000,
-      paymentHistory: 'good',
-      recentSpecies: ['Penaeus vannamei']
-    },
-    {
-      id: 'CUST-009',
-      name: 'PT Laut Biru Balikpapan',
-      primaryContactName: 'Irfan Maulana',
-      primaryContactPhone: '+62-542-789-0123',
-      email: 'irfan@lautbiru.co.id',
-      addressText: 'Jl. Jenderal Sudirman No. 45, Balikpapan',
-      latitude: -1.2379,
-      longitude: 116.8531,
-      country: 'Indonesia',
-      province: 'Kalimantan Timur',
-      district: 'Balikpapan',
-      credentials: [
-        { id: 'C12', type: 'AMDAL Laut', status: 'valid' },
-        { id: 'C13', type: 'Izin Lokasi', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 14,
-      totalValue: 118000,
-      lastOrderDate: new Date('2024-03-10'),
-      averageOrderValue: 8428,
-      paymentHistory: 'excellent',
-      recentSpecies: ['Penaeus monodon', 'Penaeus vannamei']
-    },
-    {
-      id: 'CUST-010',
-      name: 'CV Udang Organik Jogja',
-      primaryContactName: 'Dewi Kartini',
-      primaryContactPhone: '+62-274-345-6789',
-      email: 'dewi@udangorganik-jogja.id',
-      addressText: 'Jl. Malioboro No. 189, Yogyakarta',
-      latitude: -7.7956,
-      longitude: 110.3695,
-      country: 'Indonesia',
-      province: 'DI Yogyakarta',
-      district: 'Yogyakarta',
-      credentials: [
-        { id: 'C14', type: 'Sertifikat Organik', status: 'valid' },
-        { id: 'C15', type: 'Izin Usaha Kecil', status: 'expiring' }
-      ],
-      status: 'active',
-      totalOrders: 7,
-      totalValue: 52500,
-      lastOrderDate: new Date('2024-02-25'),
-      averageOrderValue: 7500,
-      paymentHistory: 'good',
-      recentSpecies: ['Penaeus vannamei']
-    },
-    {
-      id: 'CUST-011',
-      name: 'PT Indo Shrimp Export',
-      primaryContactName: 'Tommy Wijaya',
-      primaryContactPhone: '+62-22-678-9012',
-      email: 'tommy@indoshrimpexport.id',
-      addressText: 'Jl. Asia Afrika No. 78, Bandung',
-      latitude: -6.9175,
-      longitude: 107.6191,
-      country: 'Indonesia',
-      province: 'Jawa Barat',
-      district: 'Bandung',
-      credentials: [
-        { id: 'C16', type: 'Izin Ekspor', status: 'valid' },
-        { id: 'C17', type: 'HACCP Certificate', status: 'valid' }
-      ],
-      status: 'active',
-      totalOrders: 22,
-      totalValue: 198000,
-      lastOrderDate: new Date('2024-03-18'),
-      averageOrderValue: 9000,
-      paymentHistory: 'excellent',
-      recentSpecies: ['Penaeus monodon', 'Penaeus vannamei', 'Penaeus japonicus']
-    }
-  ], []);
+  // Fetch customer locations from API
+  const { data: customerLocationData, isLoading, error } = useQuery({
+    queryKey: ['customer-locations'],
+    queryFn: () => apiClient.getCustomerLocations({ limit: 100 }),
+  });
+
+  // Transform API data to match component interface
+  const customers: Customer[] = useMemo(() => {
+    if (!customerLocationData?.locations) return [];
+    
+    return customerLocationData.locations.map((location: any) => ({
+      id: location.id,
+      name: location.name,
+      primaryContactName: 'Contact', // API doesn't return this field
+      primaryContactPhone: '', // API doesn't return this field
+      email: '', // API doesn't return this field
+      addressText: location.city,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      country: location.country,
+      province: '', // API doesn't return this field
+      district: '', // API doesn't return this field
+      credentials: location.credentialStatus === 'valid' 
+        ? [{ id: '1', type: 'Business License', status: 'valid' as const }]
+        : location.credentialStatus === 'expiring'
+        ? [{ id: '1', type: 'Business License', status: 'expiring' as const }]
+        : [{ id: '1', type: 'Business License', status: 'expired' as const }],
+      status: location.status,
+      totalOrders: location.orderCount || 0,
+      totalValue: location.revenue || 0,
+      lastOrderDate: location.lastOrderDate ? new Date(location.lastOrderDate) : undefined,
+      averageOrderValue: location.orderCount > 0 ? (location.revenue || 0) / location.orderCount : 0,
+      paymentHistory: location.revenue > 50000 ? 'excellent' as const : 
+                     location.revenue > 20000 ? 'good' as const :
+                     location.revenue > 5000 ? 'fair' as const : 'poor' as const,
+      recentSpecies: ['Penaeus vannamei', 'Penaeus monodon'], // Default species
+    }));
+  }, [customerLocationData]);
+
+  // Show loading or error states
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading customer locations...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Failed to load customer locations</p>
+          <p className="text-gray-500 text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter customers based on current filters
   const filteredCustomers = useMemo(() => {
@@ -519,268 +322,248 @@ const CustomerMap = React.memo(function CustomerMap({ onNewOrder, onViewProfile,
       }
 
       // Customer status filter
-      if (filters.customerStatus !== 'all' && customer.status !== filters.customerStatus) return false;
+      if (filters.customerStatus !== 'all' && customer.status !== filters.customerStatus) {
+        return false;
+      }
 
       // Credential status filter
       if (filters.credentialStatus !== 'all') {
-        const hasValid = customer.credentials.some(c => c.status === 'valid');
-        const hasExpiring = customer.credentials.some(c => c.status === 'expiring');
-        const hasExpired = customer.credentials.some(c => c.status === 'expired');
-        
-        if (filters.credentialStatus === 'valid' && !hasValid) return false;
-        if (filters.credentialStatus === 'expiring' && !hasExpiring) return false;
-        if (filters.credentialStatus === 'expired' && !hasExpired) return false;
+        const hasStatus = customer.credentials.some(c => c.status === filters.credentialStatus);
+        if (!hasStatus) return false;
       }
 
       // Country filter
-      if (filters.country !== 'all' && customer.country !== filters.country) return false;
+      if (filters.country !== 'all' && customer.country !== filters.country) {
+        return false;
+      }
 
       // Species filter
-      if (filters.species !== 'all' && !customer.recentSpecies.includes(filters.species)) return false;
+      if (filters.species !== 'all') {
+        const hasSpecies = customer.recentSpecies.includes(filters.species);
+        if (!hasSpecies) return false;
+      }
 
       return true;
     });
   }, [customers, filters]);
 
-  // Get marker color based on customer status and credentials
-  const getMarkerColor = (customer: Customer) => {
-    if (customer.status === 'blacklisted') return '#DC2626'; // Red
-    
-    const hasValidCredentials = customer.credentials.some(c => c.status === 'valid');
-    const hasExpiringCredentials = customer.credentials.some(c => c.status === 'expiring');
-    const hasExpiredCredentials = customer.credentials.some(c => c.status === 'expired');
-    
-    if (hasExpiredCredentials || customer.credentials.length === 0) return '#DC2626'; // Red
-    if (hasExpiringCredentials) return '#F59E0B'; // Yellow
-    if (hasValidCredentials) return '#10B981'; // Green
-    
-    return '#6B7280'; // Gray
-  };
+  // Calculate summary statistics
+  const summary = useMemo(() => {
+    const total = filteredCustomers.length;
+    const active = filteredCustomers.filter(c => c.status === 'active').length;
+    const credentialIssues = filteredCustomers.filter(c => 
+      c.credentials.some(cred => cred.status === 'expired' || cred.status === 'expiring')
+    ).length;
+    const totalValue = filteredCustomers.reduce((sum, c) => sum + c.totalValue, 0);
+    const countries = [...new Set(filteredCustomers.map(c => c.country))];
 
+    return {
+      totalCustomers: total,
+      activeCustomers: active,
+      credentialIssues,
+      totalValue,
+      topCountries: countries.slice(0, 3),
+    };
+  }, [filteredCustomers]);
 
-  // Using default Leaflet markers for simplicity and reliability
-
-  const countries = [...new Set(customers.map(c => c.country))].sort();
-  const species = [...new Set(customers.flatMap(c => c.recentSpecies))].sort();
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading map...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full space-y-6" style={{ minHeight: 'calc(100vh - 3rem)' }}>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Customer Map</h2>
-          <p className="text-gray-600">Geographic view of customers with credential status</p>
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <MapPin className="h-6 w-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Customer Map</h1>
+            <p className="text-gray-600">Geographic distribution and customer insights</p>
+          </div>
         </div>
         <div className="flex items-center space-x-3">
           <Button
             variant={showHeatmap ? 'primary' : 'outline'}
-            size="sm"
             onClick={() => setShowHeatmap(!showHeatmap)}
+            icon={<Layers className="h-4 w-4" />}
           >
-            <Layers className="h-4 w-4 mr-2" />
             {showHeatmap ? 'Hide' : 'Show'} Heatmap
           </Button>
-          <Button variant="outline" size="sm">
-            <Target className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            icon={<Target className="h-4 w-4" />}
+          >
             Center Map
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-            <select
-              value={filters.dateRange}
-              onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Time</option>
-              <option value="30">Last 30 Days</option>
-              <option value="90">Last Quarter</option>
-              <option value="365">Last Year</option>
-            </select>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Filters Panel */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-gray-900">Filters</h3>
+              <Filter className="h-4 w-4 text-gray-400" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+              <select
+                value={filters.dateRange}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Time</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last Quarter</option>
+                <option value="365">Last Year</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Status</label>
+              <select
+                value={filters.customerStatus}
+                onChange={(e) => setFilters(prev => ({ ...prev, customerStatus: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="blacklisted">Blacklisted</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Credentials</label>
+              <select
+                value={filters.credentialStatus}
+                onChange={(e) => setFilters(prev => ({ ...prev, credentialStatus: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Credentials</option>
+                <option value="valid">Valid</option>
+                <option value="expiring">Expiring</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <select
+                value={filters.country}
+                onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Countries</option>
+                <option value="Indonesia">Indonesia</option>
+                <option value="Thailand">Thailand</option>
+                <option value="Vietnam">Vietnam</option>
+                <option value="Philippines">Philippines</option>
+                <option value="Malaysia">Malaysia</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Species</label>
+              <select
+                value={filters.species}
+                onChange={(e) => setFilters(prev => ({ ...prev, species: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Species</option>
+                <option value="Penaeus vannamei">Penaeus vannamei</option>
+                <option value="Penaeus monodon">Penaeus monodon</option>
+                <option value="Penaeus japonicus">Penaeus japonicus</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Status</label>
-            <select
-              value={filters.customerStatus}
-              onChange={(e) => setFilters(prev => ({ ...prev, customerStatus: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="blacklisted">Blacklisted</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Credentials</label>
-            <select
-              value={filters.credentialStatus}
-              onChange={(e) => setFilters(prev => ({ ...prev, credentialStatus: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Credentials</option>
-              <option value="valid">Valid</option>
-              <option value="expiring">Expiring</option>
-              <option value="expired">Expired</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-            <select
-              value={filters.country}
-              onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Countries</option>
-              {countries.map(country => (
-                <option key={country} value={country}>{country}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Species</label>
-            <select
-              value={filters.species}
-              onChange={(e) => setFilters(prev => ({ ...prev, species: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Species</option>
-              {species.map(spec => (
-                <option key={spec} value={spec}>{spec}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setFilters({
-                dateRange: 'all',
-                customerStatus: 'all',
-                credentialStatus: 'all',
-                country: 'all',
-                species: 'all'
-              })}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Map and Legend */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full h-full">
-        {/* Map Container */}
-        <div className="lg:col-span-3 bg-white rounded-lg border border-gray-200 overflow-hidden w-full h-full">
-          <div className="w-full relative" style={{ height: '600px' }}>
-            {isClient ? (
-              <MemoizedMapContainer
-                customers={filteredCustomers}
-                onNewOrder={onNewOrder}
-                onViewProfile={onViewProfile}
-                onSendMessage={onSendMessage}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">Loading map...</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Legend and Stats */}
-        <div className="space-y-6">
           {/* Legend */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h3 className="font-medium text-gray-900 mb-4">Legend</h3>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 rounded-full bg-green-500"></div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
                 <span className="text-sm text-gray-600">Valid Credentials</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
                 <span className="text-sm text-gray-600">Expiring Credentials</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 rounded-full bg-red-500"></div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
                 <span className="text-sm text-gray-600">Expired/Missing Credentials</span>
               </div>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h3 className="font-medium text-gray-900 mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Total Customers</span>
-                  <span className="font-medium">{filteredCustomers.length}</span>
-                </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total Customers</span>
+                <span className="text-sm font-medium text-gray-900">{summary.totalCustomers}</span>
               </div>
-              <div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Active</span>
-                  <span className="font-medium text-green-600">
-                    {filteredCustomers.filter(c => c.status === 'active').length}
-                  </span>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Active</span>
+                <span className="text-sm font-medium text-gray-900">{summary.activeCustomers}</span>
               </div>
-              <div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Credential Issues</span>
-                  <span className="font-medium text-yellow-600">
-                    {filteredCustomers.filter(c => 
-                      c.credentials.some(cred => cred.status === 'expiring' || cred.status === 'expired')
-                    ).length}
-                  </span>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Credential Issues</span>
+                <span className="text-sm font-medium text-gray-900">{summary.credentialIssues}</span>
               </div>
-              <div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Total Value</span>
-                  <span className="font-medium">
-                    ${filteredCustomers.reduce((sum, c) => sum + c.totalValue, 0).toLocaleString()}
-                  </span>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total Value</span>
+                <span className="text-sm font-medium text-gray-900">${summary.totalValue.toLocaleString()}</span>
               </div>
             </div>
           </div>
 
           {/* Top Countries */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h3 className="font-medium text-gray-900 mb-4">Top Countries</h3>
             <div className="space-y-2">
-              {countries.slice(0, 5).map(country => {
-                const countryCustomers = filteredCustomers.filter(c => c.country === country);
-                const countryValue = countryCustomers.reduce((sum, c) => sum + c.totalValue, 0);
+              {summary.topCountries.map((country, index) => {
+                const countryCustomers = filteredCustomers.filter(c => c.country === country).length;
+                const countryValue = filteredCustomers
+                  .filter(c => c.country === country)
+                  .reduce((sum, c) => sum + c.totalValue, 0);
                 
                 return (
-                  <div key={country} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{country}</span>
+                  <div key={country} className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">{country}</span>
                     <div className="text-right">
-                      <div className="font-medium">{countryCustomers.length}</div>
+                      <div className="text-sm font-medium text-gray-900">{countryCustomers}</div>
                       <div className="text-xs text-gray-500">${countryValue.toLocaleString()}</div>
                     </div>
                   </div>
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Map */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <MemoizedMapContainer 
+              customers={filteredCustomers}
+              onNewOrder={onNewOrder}
+              onViewProfile={onViewProfile}
+              onSendMessage={onSendMessage}
+            />
           </div>
         </div>
       </div>
