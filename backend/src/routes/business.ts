@@ -182,7 +182,7 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
       c.address_text as city,
       c.country,
       c.status,
-      c.credential_status,
+      c.credentials,
       COALESCE(SUM(o.total_value), 0) as revenue,
       COUNT(o.id) as order_count,
       MAX(o.order_date) as last_order_date
@@ -190,27 +190,45 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
     LEFT JOIN orders o ON c.id = o.customer_id
     WHERE c.latitude IS NOT NULL 
       AND c.longitude IS NOT NULL
-    GROUP BY c.id, c.name, c.latitude, c.longitude, c.address_text, c.country, c.status, c.credential_status
+    GROUP BY c.id, c.name, c.latitude, c.longitude, c.address_text, c.country, c.status, c.credentials
     ORDER BY revenue DESC
     LIMIT $1
   `;
   
   const result = await pool.query(customerQuery, [query.limit]);
   
-  const customerLocations = result.rows.map(row => ({
-    id: row.id,
-    name: row.name,
-    latitude: parseFloat(row.latitude),
-    longitude: parseFloat(row.longitude),
-    city: row.city || 'Unknown',
-    country: row.country || 'Unknown',
-    revenue: parseFloat(row.revenue) || 0,
-    orderCount: parseInt(row.order_count) || 0,
-    lastOrderDate: row.last_order_date || null,
-    customerTier: row.revenue > 100000 ? 'enterprise' : row.revenue > 50000 ? 'premium' : row.revenue > 20000 ? 'standard' : 'basic',
-    status: row.status || 'active',
-    credentialStatus: row.credential_status || 'unknown',
-  }));
+  const customerLocations = result.rows.map(row => {
+    // Calculate credential status from JSONB credentials
+    let credentialStatus = 'missing';
+    if (row.credentials && Array.isArray(row.credentials) && row.credentials.length > 0) {
+      const hasExpired = row.credentials.some(cred => cred.status === 'expired');
+      const hasExpiring = row.credentials.some(cred => cred.status === 'expiring');
+      const hasValid = row.credentials.some(cred => cred.status === 'valid');
+      
+      if (hasExpired) {
+        credentialStatus = 'expired';
+      } else if (hasExpiring) {
+        credentialStatus = 'expiring';
+      } else if (hasValid) {
+        credentialStatus = 'valid';
+      }
+    }
+
+    return {
+      id: row.id,
+      name: row.name,
+      latitude: parseFloat(row.latitude),
+      longitude: parseFloat(row.longitude),
+      city: row.city || 'Unknown',
+      country: row.country || 'Unknown',
+      revenue: parseFloat(row.revenue) || 0,
+      orderCount: parseInt(row.order_count) || 0,
+      lastOrderDate: row.last_order_date || null,
+      customerTier: row.revenue > 100000 ? 'enterprise' : row.revenue > 50000 ? 'premium' : row.revenue > 20000 ? 'standard' : 'basic',
+      status: row.status || 'active',
+      credentialStatus,
+    };
+  });
 
   // Filter by bounds if provided
   let filteredLocations = customerLocations;
