@@ -169,99 +169,54 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
 
   const query = querySchema.parse(req.query);
   
-  // Mock customer location data - TODO: Replace with real database queries
-  const mockLocations = [
-    {
-      id: '1',
-      name: 'Thai Shrimp Farms Co.',
-      latitude: 13.7563,
-      longitude: 100.5018,
-      city: 'Bangkok',
-      country: 'Thailand',
-      revenue: 124500,
-      orderCount: 15,
-      lastOrderDate: '2024-03-15',
-      customerTier: 'premium',
-      status: 'active',
-      credentialStatus: 'valid',
-    },
-    {
-      id: '2',
-      name: 'Vietnam Aquaculture Ltd.',
-      latitude: 10.8231,
-      longitude: 106.6297,
-      city: 'Ho Chi Minh City',
-      country: 'Vietnam',
-      revenue: 98200,
-      orderCount: 12,
-      lastOrderDate: '2024-03-12',
-      customerTier: 'standard',
-      status: 'active',
-      credentialStatus: 'expiring',
-    },
-    {
-      id: '3',
-      name: 'Indo Shrimp Export',
-      latitude: -6.2088,
-      longitude: 106.8456,
-      city: 'Jakarta',
-      country: 'Indonesia',
-      revenue: 156700,
-      orderCount: 22,
-      lastOrderDate: '2024-03-18',
-      customerTier: 'enterprise',
-      status: 'active',
-      credentialStatus: 'valid',
-    },
-    {
-      id: '4',
-      name: 'Philippine Marine Farms',
-      latitude: 14.5995,
-      longitude: 120.9842,
-      city: 'Manila',
-      country: 'Philippines',
-      revenue: 67800,
-      orderCount: 8,
-      lastOrderDate: '2024-03-10',
-      customerTier: 'basic',
-      status: 'active',
-      credentialStatus: 'expired',
-    },
-    {
-      id: '5',
-      name: 'US Pacific Shrimp Inc.',
-      latitude: 34.0522,
-      longitude: -118.2437,
-      city: 'Los Angeles',
-      country: 'United States',
-      revenue: 189300,
-      orderCount: 18,
-      lastOrderDate: '2024-03-16',
-      customerTier: 'enterprise',
-      status: 'active',
-      credentialStatus: 'valid',
-    },
-    {
-      id: '6',
-      name: 'EU Seafood Partners',
-      latitude: 52.3676,
-      longitude: 4.9041,
-      city: 'Amsterdam',
-      country: 'Netherlands',
-      revenue: 143200,
-      orderCount: 14,
-      lastOrderDate: '2024-03-14',
-      customerTier: 'premium',
-      status: 'active',
-      credentialStatus: 'valid',
-    },
-  ];
+  // Get real customer location data from database
+  const { pool } = await import('../config/database');
+  
+  // Query customers with location data and order statistics
+  const customerQuery = `
+    SELECT 
+      c.id,
+      c.name,
+      c.latitude,
+      c.longitude,
+      c.address_text as city,
+      c.country,
+      c.status,
+      c.credential_status,
+      COALESCE(SUM(o.total_value), 0) as revenue,
+      COUNT(o.id) as order_count,
+      MAX(o.order_date) as last_order_date
+    FROM customers c
+    LEFT JOIN orders o ON c.id = o.customer_id
+    WHERE c.latitude IS NOT NULL 
+      AND c.longitude IS NOT NULL
+    GROUP BY c.id, c.name, c.latitude, c.longitude, c.address_text, c.country, c.status, c.credential_status
+    ORDER BY revenue DESC
+    LIMIT $1
+  `;
+  
+  const result = await pool.query(customerQuery, [query.limit]);
+  
+  const customerLocations = result.rows.map(row => ({
+    id: row.id,
+    name: row.name,
+    latitude: parseFloat(row.latitude),
+    longitude: parseFloat(row.longitude),
+    city: row.city || 'Unknown',
+    country: row.country || 'Unknown',
+    revenue: parseFloat(row.revenue) || 0,
+    orderCount: parseInt(row.order_count) || 0,
+    lastOrderDate: row.last_order_date || null,
+    customerTier: row.revenue > 100000 ? 'enterprise' : row.revenue > 50000 ? 'premium' : row.revenue > 20000 ? 'standard' : 'basic',
+    status: row.status || 'active',
+    credentialStatus: row.credential_status || 'unknown',
+  }));
 
   // Filter by bounds if provided
-  let filteredLocations = mockLocations;
+  let filteredLocations = customerLocations;
   if (query.bounds) {
     const [lat1, lng1, lat2, lng2] = query.bounds.split(',').map(Number);
-    filteredLocations = mockLocations.filter(location => 
+    filteredLocations = customerLocations.filter(location => 
       location.latitude >= Math.min(lat1, lat2) &&
       location.latitude <= Math.max(lat1, lat2) &&
       location.longitude >= Math.min(lng1, lng2) &&
@@ -269,18 +224,17 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
     );
   }
 
-  // Apply limit
-  const limitedLocations = filteredLocations.slice(0, query.limit);
+  // Locations are already limited by the database query
 
   res.json({
     success: true,
     data: {
-      locations: limitedLocations,
+      locations: filteredLocations,
       summary: {
-        totalCustomers: limitedLocations.length,
-        totalRevenue: limitedLocations.reduce((sum, loc) => sum + loc.revenue, 0),
-        totalOrders: limitedLocations.reduce((sum, loc) => sum + loc.orderCount, 0),
-        credentialIssues: limitedLocations.filter(loc => loc.credentialStatus !== 'valid').length,
+        totalCustomers: filteredLocations.length,
+        totalRevenue: filteredLocations.reduce((sum, loc) => sum + loc.revenue, 0),
+        totalOrders: filteredLocations.reduce((sum, loc) => sum + loc.orderCount, 0),
+        credentialIssues: filteredLocations.filter(loc => loc.credentialStatus !== 'valid').length,
       },
       lastUpdated: new Date().toISOString(),
     },
