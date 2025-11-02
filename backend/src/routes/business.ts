@@ -201,9 +201,10 @@ router.get('/customer-locations', asyncHandler(async (req: AuthenticatedRequest,
     // Calculate credential status from JSONB credentials
     let credentialStatus = 'missing';
     if (row.credentials && Array.isArray(row.credentials) && row.credentials.length > 0) {
-      const hasExpired = row.credentials.some(cred => cred.status === 'expired');
-      const hasExpiring = row.credentials.some(cred => cred.status === 'expiring');
-      const hasValid = row.credentials.some(cred => cred.status === 'valid');
+      const credentials = row.credentials as Array<{ status: string; [key: string]: any }>;
+      const hasExpired = credentials.some((cred: { status: string }) => cred.status === 'expired');
+      const hasExpiring = credentials.some((cred: { status: string }) => cred.status === 'expiring');
+      const hasValid = credentials.some((cred: { status: string }) => cred.status === 'valid');
       
       if (hasExpired) {
         credentialStatus = 'expired';
