@@ -287,29 +287,6 @@ const CustomerMap = React.memo(function CustomerMap({ onNewOrder, onViewProfile,
     }));
   }, [customerLocationData]);
 
-  // Show loading or error states
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading customer locations...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <p className="text-red-600 mb-2">Failed to load customer locations</p>
-          <p className="text-gray-500 text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
-        </div>
-      </div>
-    );
-  }
-
   // Filter customers based on current filters
   const filteredCustomers = useMemo(() => {
     return customers.filter(customer => {
@@ -365,6 +342,29 @@ const CustomerMap = React.memo(function CustomerMap({ onNewOrder, onViewProfile,
       topCountries: countries.slice(0, 3),
     };
   }, [filteredCustomers]);
+
+  // Show loading or error states AFTER all hooks
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading customer locations...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Failed to load customer locations</p>
+          <p className="text-gray-500 text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isClient) {
     return (
