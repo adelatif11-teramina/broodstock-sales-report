@@ -4,14 +4,18 @@ import React, { useState } from 'react';
 import { withAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import OrderManagement from '@/components/orders/OrderManagement';
-import NewOrderForm from '@/components/orders/NewOrderForm';
+import OrderForm from '@/components/orders/OrderForm';
 
 function OrdersPage() {
   const [showNewOrderForm, setShowNewOrderForm] = useState(false);
 
-  const handleNewOrder = (orderData: any) => {
-    console.log('New order created:', orderData);
-    // Here you would typically save the order to your backend
+  const handleOrderSuccess = (orderId: string) => {
+    console.log('Order created successfully:', orderId);
+    setShowNewOrderForm(false);
+    // TODO: Show success message or redirect to order details
+  };
+
+  const handleOrderCancel = () => {
     setShowNewOrderForm(false);
   };
 
@@ -20,10 +24,17 @@ function OrdersPage() {
       <OrderManagement onNewOrder={() => setShowNewOrderForm(true)} />
       
       {showNewOrderForm && (
-        <NewOrderForm
-          onClose={() => setShowNewOrderForm(false)}
-          onSave={handleNewOrder}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Order</h2>
+              <OrderForm
+                onSuccess={handleOrderSuccess}
+                onCancel={handleOrderCancel}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );
