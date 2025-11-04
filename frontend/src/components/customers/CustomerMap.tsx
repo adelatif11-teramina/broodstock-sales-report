@@ -407,90 +407,93 @@ const CustomerMap = React.memo(function CustomerMap({ onNewOrder, onViewProfile,
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Filters Panel */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-gray-900">Filters</h3>
-              <Filter className="h-4 w-4 text-gray-400" />
-            </div>
+      {/* Filters Panel - Moved to top */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-medium text-gray-900">Filters</h3>
+          <Filter className="h-4 w-4 text-gray-400" />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <select
-                value={filters.dateRange}
-                onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Time</option>
-                <option value="30">Last 30 Days</option>
-                <option value="90">Last Quarter</option>
-                <option value="365">Last Year</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Status</label>
-              <select
-                value={filters.customerStatus}
-                onChange={(e) => setFilters(prev => ({ ...prev, customerStatus: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="blacklisted">Blacklisted</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Credentials</label>
-              <select
-                value={filters.credentialStatus}
-                onChange={(e) => setFilters(prev => ({ ...prev, credentialStatus: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Credentials</option>
-                <option value="valid">Valid</option>
-                <option value="expiring">Expiring</option>
-                <option value="expired">Expired</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-              <select
-                value={filters.country}
-                onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Countries</option>
-                <option value="Indonesia">Indonesia</option>
-                <option value="Thailand">Thailand</option>
-                <option value="Vietnam">Vietnam</option>
-                <option value="Philippines">Philippines</option>
-                <option value="Malaysia">Malaysia</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Species</label>
-              <select
-                value={filters.species}
-                onChange={(e) => setFilters(prev => ({ ...prev, species: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Species</option>
-                <option value="Penaeus vannamei">Penaeus vannamei</option>
-                <option value="Penaeus monodon">Penaeus monodon</option>
-                <option value="Penaeus japonicus">Penaeus japonicus</option>
-              </select>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+            <select
+              value={filters.dateRange}
+              onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Time</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last Quarter</option>
+              <option value="365">Last Year</option>
+            </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Status</label>
+            <select
+              value={filters.customerStatus}
+              onChange={(e) => setFilters(prev => ({ ...prev, customerStatus: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="blacklisted">Blacklisted</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Credentials</label>
+            <select
+              value={filters.credentialStatus}
+              onChange={(e) => setFilters(prev => ({ ...prev, credentialStatus: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Credentials</option>
+              <option value="valid">Valid</option>
+              <option value="expiring">Expiring</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+            <select
+              value={filters.country}
+              onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Countries</option>
+              <option value="Indonesia">Indonesia</option>
+              <option value="Thailand">Thailand</option>
+              <option value="Vietnam">Vietnam</option>
+              <option value="Philippines">Philippines</option>
+              <option value="Malaysia">Malaysia</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Species</label>
+            <select
+              value={filters.species}
+              onChange={(e) => setFilters(prev => ({ ...prev, species: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Species</option>
+              <option value="Penaeus vannamei">Penaeus vannamei</option>
+              <option value="Penaeus monodon">Penaeus monodon</option>
+              <option value="Penaeus japonicus">Penaeus japonicus</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar with Legend and Stats */}
+        <div className="lg:col-span-1">
           {/* Legend */}
-          <div className="bg-white rounded-lg shadow p-6 mt-6">
+          <div className="bg-white rounded-lg shadow p-6">
             <h3 className="font-medium text-gray-900 mb-4">Legend</h3>
             <div className="space-y-3">
               <div className="flex items-center">
