@@ -21,7 +21,7 @@ export const TimelineEventSchema = z.object({
   relatedId: z.string().optional(),
   relatedEntity: z.string().optional(),
   severity: TimelineSeverityEnum.default('info'),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.string(), z.unknown()).optional()
 });
 
 export const TopSpeciesSchema = z.object({
