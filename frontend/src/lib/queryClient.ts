@@ -40,6 +40,7 @@ export const queryKeys = {
   // Customers
   customers: ['customers'] as const,
   customer: (id: string) => ['customers', id] as const,
+  customerAnalytics: (id: string) => ['customers', 'analytics', id] as const,
   customerStats: ['customers', 'stats'] as const,
   nearbyCustomers: (lat: number, lng: number, radius: number) => 
     ['customers', 'nearby', lat, lng, radius] as const,

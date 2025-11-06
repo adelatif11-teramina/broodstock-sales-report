@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
   Search,
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import Button from '@/components/ui/Button';
+import CustomerInsightPanel from '@/components/customers/CustomerInsightPanel';
 
 interface Credential {
   id: string;
@@ -222,6 +223,7 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
   const [filterCountry, setFilterCountry] = useState<string>('all');
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [insightCustomerId, setInsightCustomerId] = useState<string | null>(null);
 
   // Filter customers
   const filteredCustomers = useMemo(() => {
@@ -310,6 +312,21 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
   };
 
   const countries = [...new Set(customers.map(c => c.country))].sort();
+
+  const insightCustomer = useMemo(() => {
+    if (!insightCustomerId) return null;
+    return customers.find(customer => customer.id === insightCustomerId) || null;
+  }, [customers, insightCustomerId]);
+
+  useEffect(() => {
+    if (insightCustomerId && !insightCustomer) {
+      setInsightCustomerId(null);
+    }
+  }, [insightCustomerId, insightCustomer]);
+
+  const openInsights = (customerId: string) => {
+    setInsightCustomerId(customerId);
+  };
 
   return (
     <div className="space-y-6">
@@ -526,10 +543,10 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex items-center space-x-2">
-                          <Button size="sm" variant="ghost">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button size="sm" variant="ghost" onClick={() => openInsights(customer.id)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                           <Button size="sm" variant="ghost">
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -631,7 +648,7 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
                       {customer.paymentHistory} payment
                     </span>
                     <div className="flex space-x-1">
-                      <Button size="sm" variant="ghost">
+                      <Button size="sm" variant="ghost" onClick={() => openInsights(customer.id)}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="ghost">
@@ -697,6 +714,27 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
           </div>
         </div>
       </div>
+      {insightCustomer && (
+        <CustomerInsightPanel
+          customer={{
+            id: insightCustomer.id,
+            name: insightCustomer.name,
+            primaryContactName: insightCustomer.primaryContactName,
+            primaryContactPhone: insightCustomer.primaryContactPhone,
+            email: insightCustomer.email,
+            country: insightCustomer.country,
+            province: insightCustomer.province,
+            district: insightCustomer.district,
+            status: insightCustomer.status,
+            totalOrders: insightCustomer.totalOrders,
+            totalValue: insightCustomer.totalValue,
+            lastOrderDate: insightCustomer.lastOrderDate,
+            credentials: insightCustomer.credentials,
+            paymentHistory: insightCustomer.paymentHistory,
+          }}
+          onClose={() => setInsightCustomerId(null)}
+        />
+      )}
     </div>
   );
 }

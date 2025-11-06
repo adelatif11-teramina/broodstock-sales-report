@@ -75,6 +75,112 @@ GET /customers/{id}
 Authorization: Bearer your-access-token
 ```
 
+### Get Customer Analytics Snapshot
+```http
+GET /customers/{id}/analytics
+Authorization: Bearer your-access-token
+```
+
+**Description:**
+Returns a consolidated analytics payload for a single customer, including lifetime sales performance, credential health, outstanding financials, and a recent activity timeline.
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "data": {
+    "analytics": {
+      "customerId": "cust-001",
+      "summary": {
+        "totalOrders": 12,
+        "totalValue": 125000,
+        "averageOrderValue": 10416.67,
+        "lastOrderDate": "2024-03-05T00:00:00.000Z",
+        "daysSinceLastOrder": 12,
+        "averageDaysBetweenOrders": 28,
+        "orderFrequencyPerQuarter": 3.4,
+        "openShipmentCount": 1,
+        "openIssuesCount": 0,
+        "outstandingInvoiceValue": 2500,
+        "outstandingInvoiceCount": 1,
+        "retentionRisk": "medium"
+      },
+      "performanceByPeriod": [
+        { "period": "2024-Q1", "totalValue": 42500, "orderCount": 4, "averageValue": 10625 }
+      ],
+      "topSpecies": [
+        { "species": "Penaeus vannamei", "orderCount": 7, "totalQuantity": 22000, "totalValue": 78000 }
+      ],
+      "recentOrders": [
+        {
+          "id": "order-123",
+          "orderNumber": "PO-2024-009",
+          "species": "Penaeus vannamei",
+          "strain": "Line A",
+          "orderDate": "2024-03-05T00:00:00.000Z",
+          "shipmentStatus": "pending",
+          "qualityFlag": "ok",
+          "totalValue": 12500,
+          "quantity": 5000,
+          "shipmentDate": "2024-03-12T00:00:00.000Z",
+          "shippedDate": null
+        }
+      ],
+      "recentInvoices": [
+        {
+          "id": "inv-456",
+          "amount": 2500,
+          "currency": "USD",
+          "status": "pending",
+          "issuedDate": "2024-03-06T00:00:00.000Z",
+          "paidDate": null
+        }
+      ],
+      "credentialStatus": {
+        "total": 2,
+        "valid": 1,
+        "expiring": 1,
+        "expired": 0,
+        "nextExpiryDate": "2024-04-15T00:00:00.000Z",
+        "credentials": [
+          {
+            "id": "cred-1",
+            "type": "license",
+            "number": "LIC-TH-2024-001",
+            "status": "expiring",
+            "issuedDate": "2023-04-15T00:00:00.000Z",
+            "expiryDate": "2024-04-15T00:00:00.000Z",
+            "daysUntilExpiry": 23
+          }
+        ]
+      },
+      "timeline": [
+        {
+          "id": "order-123",
+          "type": "order",
+          "timestamp": "2024-03-05T08:05:00.000Z",
+          "title": "Order PO-2024-009",
+          "description": "5000 units of Penaeus vannamei",
+          "severity": "info"
+        }
+      ],
+      "warnings": [
+        {
+          "code": "credentials_expiring",
+          "message": "1 credential(s) expiring soon",
+          "severity": "warning"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Notes:**
+- All monetary fields are returned in the order currency (default USD).
+- Timeline events are sorted in descending chronological order and capped at the most recent 50 items for performance.
+- Retention risk is a heuristic derived from order cadence, outstanding issues, and financial posture.
+
 ### Create Customer
 ```http
 POST /customers

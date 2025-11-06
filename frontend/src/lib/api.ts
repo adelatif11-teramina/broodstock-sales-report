@@ -133,6 +133,110 @@ export interface Order {
   };
 }
 
+export type CustomerRetentionRisk = 'low' | 'medium' | 'high';
+export type TimelineEventSeverity = 'info' | 'warning' | 'critical';
+
+export interface CustomerAnalyticsWarning {
+  code: string;
+  message: string;
+  severity: TimelineEventSeverity;
+}
+
+export interface CustomerAnalyticsSummary {
+  totalOrders: number;
+  totalValue: number;
+  averageOrderValue: number;
+  lastOrderDate: string | null;
+  daysSinceLastOrder: number | null;
+  averageDaysBetweenOrders: number | null;
+  orderFrequencyPerQuarter: number | null;
+  openShipmentCount: number;
+  openIssuesCount: number;
+  outstandingInvoiceValue: number;
+  outstandingInvoiceCount: number;
+  retentionRisk: CustomerRetentionRisk;
+}
+
+export interface CustomerAnalyticsPeriodPerformance {
+  period: string;
+  totalValue: number;
+  orderCount: number;
+  averageValue: number;
+}
+
+export interface CustomerAnalyticsSpeciesSummary {
+  species: string;
+  orderCount: number;
+  totalQuantity: number;
+  totalValue: number;
+}
+
+export interface CustomerAnalyticsOrderSnapshot {
+  id: string;
+  orderNumber: string;
+  species: string;
+  strain: string | null;
+  orderDate: string;
+  shipmentStatus: string;
+  qualityFlag: string;
+  totalValue: number;
+  quantity: number;
+  shipmentDate: string | null;
+  shippedDate: string | null;
+}
+
+export interface CustomerAnalyticsInvoiceSnapshot {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  issuedDate: string;
+  paidDate: string | null;
+}
+
+export interface CustomerAnalyticsCredentialSummary {
+  id?: string;
+  type: string;
+  number?: string;
+  status: 'valid' | 'expiring' | 'expired';
+  issuedDate?: string;
+  expiryDate?: string;
+  daysUntilExpiry?: number;
+}
+
+export interface CustomerAnalyticsCredentialStatus {
+  total: number;
+  valid: number;
+  expiring: number;
+  expired: number;
+  nextExpiryDate?: string;
+  credentials: CustomerAnalyticsCredentialSummary[];
+}
+
+export interface CustomerAnalyticsTimelineEvent {
+  id: string;
+  type: 'order' | 'shipment' | 'invoice' | 'payment' | 'credential' | 'note' | 'audit';
+  timestamp: string;
+  title: string;
+  description?: string;
+  relatedId?: string;
+  relatedEntity?: string;
+  severity: TimelineEventSeverity;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CustomerAnalytics {
+  customerId: string;
+  summary: CustomerAnalyticsSummary;
+  performanceByPeriod: CustomerAnalyticsPeriodPerformance[];
+  topSpecies: CustomerAnalyticsSpeciesSummary[];
+  recentOrders: CustomerAnalyticsOrderSnapshot[];
+  recentInvoices: CustomerAnalyticsInvoiceSnapshot[];
+  credentialStatus: CustomerAnalyticsCredentialStatus;
+  timeline: CustomerAnalyticsTimelineEvent[];
+  warnings: CustomerAnalyticsWarning[];
+}
+
 // API Client class
 export class ApiClient {
   private baseUrl: string;
@@ -336,6 +440,11 @@ export class ApiClient {
   async getCustomerStats(): Promise<any> {
     const response = await this.request('/customers/stats/summary');
     return response.data;
+  }
+
+  async getCustomerAnalytics(id: string): Promise<CustomerAnalytics> {
+    const response = await this.request<{ analytics: CustomerAnalytics }>(`/customers/${id}/analytics`);
+    return response.data!.analytics;
   }
 
   // Order methods

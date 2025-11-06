@@ -97,6 +97,21 @@ router.get('/check-duplicate',
 );
 
 /**
+ * GET /api/v1/customers/:id/analytics
+ * Get aggregated analytics for a customer
+ */
+router.get('/:id/analytics', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  const analytics = await customerService.getAnalytics(id);
+
+  res.json({
+    success: true,
+    data: { analytics },
+  });
+}));
+
+/**
  * GET /api/v1/customers/:id
  * Get customer by ID
  */
