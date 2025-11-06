@@ -44,6 +44,17 @@ const buildApiBaseUrl = (base: string, apiPath: string): string => {
 // Base API configuration
 const API_BASE_URL = buildApiBaseUrl(rawBaseUrl, apiPathFromEnv);
 
+// Debug logging for Railway deployment
+if (typeof console !== 'undefined') {
+  console.log('🔧 API Configuration Debug:', {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    rawBaseUrl,
+    apiPathFromEnv,
+    finalApiBaseUrl: API_BASE_URL
+  });
+}
+
 // Types for API responses
 export interface ApiResponse<T = any> {
   success: boolean;
