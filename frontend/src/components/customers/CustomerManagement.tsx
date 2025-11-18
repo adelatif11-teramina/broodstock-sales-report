@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
   Search,
@@ -11,8 +12,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Building,
-  Calendar,
   FileText,
   CheckCircle,
   AlertTriangle,
@@ -22,25 +21,20 @@ import {
   Package,
   Clock,
   MoreHorizontal,
-  Upload,
-  Shield,
-  Flag,
-  Star,
-  Target,
-  Truck
 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
 import Button from '@/components/ui/Button';
 import CustomerInsightPanel from '@/components/customers/CustomerInsightPanel';
+import { apiClient } from '@/lib/api';
+import { queryKeys } from '@/lib/queryClient';
 
 interface Credential {
   id: string;
   type: string;
   number: string;
-  issuedDate: Date;
-  expiryDate: Date;
-  fileUrl: string;
-  status: 'valid' | 'expiring' | 'expired';
+  issuedDate?: Date;
+  expiryDate?: Date;
+  fileUrl?: string;
+  status?: 'valid' | 'expiring' | 'expired' | 'missing';
 }
 
 interface Customer {
@@ -73,150 +67,6 @@ interface CustomerManagementProps {
 }
 
 export default function CustomerManagement({ onNewCustomer }: CustomerManagementProps = {}) {
-  const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: 'CUST-001',
-      name: 'Minh Phu Seafood Corporation',
-      primaryContactName: 'Nguyen Van Minh',
-      primaryContactPhone: '+84-28-123-4567',
-      email: 'minh@minhphu.com',
-      addressText: '123 Nguyen Hue Street, Can Tho, Vietnam',
-      latitude: 10.0341,
-      longitude: 105.7851,
-      country: 'Vietnam',
-      province: 'Can Tho',
-      district: 'Ninh Kieu',
-      credentials: [
-        {
-          id: 'CRED-001',
-          type: 'Business License',
-          number: 'BL-VN-2024-001',
-          issuedDate: new Date('2024-01-15'),
-          expiryDate: new Date('2025-01-15'),
-          fileUrl: '/docs/minh-phu-license.pdf',
-          status: 'valid'
-        },
-        {
-          id: 'CRED-002',
-          type: 'Export Permit',
-          number: 'EP-VN-2024-005',
-          issuedDate: new Date('2024-02-01'),
-          expiryDate: new Date('2024-12-31'),
-          fileUrl: '/docs/minh-phu-export.pdf',
-          status: 'expiring'
-        }
-      ],
-      status: 'active',
-      createdBy: 'john.doe@company.com',
-      createdAt: new Date('2023-06-15'),
-      updatedAt: new Date('2024-02-20'),
-      totalOrders: 15,
-      totalValue: 125000,
-      lastOrderDate: new Date('2024-02-20'),
-      averageOrderValue: 8333,
-      paymentHistory: 'excellent'
-    },
-    {
-      id: 'CUST-002',
-      name: 'Thai Union Aquaculture Ltd',
-      primaryContactName: 'Somchai Tanaka',
-      primaryContactPhone: '+66-2-555-0123',
-      email: 'somchai@thaiunion.com',
-      addressText: '456 Silom Road, Bangkok, Thailand',
-      latitude: 13.7563,
-      longitude: 100.5018,
-      country: 'Thailand',
-      province: 'Bangkok',
-      district: 'Bang Rak',
-      credentials: [
-        {
-          id: 'CRED-003',
-          type: 'Aquaculture License',
-          number: 'AL-TH-2023-012',
-          issuedDate: new Date('2023-12-01'),
-          expiryDate: new Date('2025-12-01'),
-          fileUrl: '/docs/thai-union-license.pdf',
-          status: 'valid'
-        }
-      ],
-      status: 'active',
-      createdBy: 'jane.smith@company.com',
-      createdAt: new Date('2023-08-20'),
-      updatedAt: new Date('2024-01-15'),
-      totalOrders: 8,
-      totalValue: 67500,
-      lastOrderDate: new Date('2024-01-15'),
-      averageOrderValue: 8437,
-      paymentHistory: 'good'
-    },
-    {
-      id: 'CUST-003',
-      name: 'Coastal Aqua Farms Pvt Ltd',
-      primaryContactName: 'Raj Patel',
-      primaryContactPhone: '+91-22-2345-6789',
-      email: 'raj@coastalaqua.in',
-      addressText: '789 Marine Drive, Mumbai, India',
-      latitude: 19.0760,
-      longitude: 72.8777,
-      country: 'India',
-      province: 'Maharashtra',
-      district: 'Mumbai',
-      credentials: [
-        {
-          id: 'CRED-004',
-          type: 'Import License',
-          number: 'IL-IN-2024-003',
-          issuedDate: new Date('2024-01-01'),
-          expiryDate: new Date('2024-06-30'),
-          fileUrl: '/docs/coastal-import.pdf',
-          status: 'expired'
-        }
-      ],
-      status: 'paused',
-      createdBy: 'john.doe@company.com',
-      createdAt: new Date('2023-11-10'),
-      updatedAt: new Date('2024-03-01'),
-      totalOrders: 3,
-      totalValue: 18000,
-      lastOrderDate: new Date('2023-12-15'),
-      averageOrderValue: 6000,
-      paymentHistory: 'fair'
-    },
-    {
-      id: 'CUST-004',
-      name: 'Indonesia Shrimp Holdings',
-      primaryContactName: 'Ahmad Susanto',
-      primaryContactPhone: '+62-21-555-7890',
-      email: 'ahmad@shrimpholdings.id',
-      addressText: '321 Jalan Sudirman, Jakarta, Indonesia',
-      latitude: -6.2088,
-      longitude: 106.8456,
-      country: 'Indonesia',
-      province: 'Jakarta',
-      district: 'Central Jakarta',
-      credentials: [
-        {
-          id: 'CRED-005',
-          type: 'Business Registration',
-          number: 'BR-ID-2024-007',
-          issuedDate: new Date('2024-03-01'),
-          expiryDate: new Date('2025-03-01'),
-          fileUrl: '/docs/indonesia-registration.pdf',
-          status: 'valid'
-        }
-      ],
-      status: 'active',
-      createdBy: 'jane.smith@company.com',
-      createdAt: new Date('2024-02-28'),
-      updatedAt: new Date('2024-03-01'),
-      totalOrders: 1,
-      totalValue: 2750,
-      lastOrderDate: new Date('2024-03-01'),
-      averageOrderValue: 2750,
-      paymentHistory: 'good'
-    }
-  ]);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCredentials, setFilterCredentials] = useState<string>('all');
@@ -224,6 +74,64 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [insightCustomerId, setInsightCustomerId] = useState<string | null>(null);
+
+  const customerFilters = useMemo(() => ({
+    search: searchTerm || undefined,
+    status: filterStatus === 'all' ? undefined : filterStatus,
+    country: filterCountry === 'all' ? undefined : filterCountry,
+    limit: 50,
+    offset: 0,
+    sort_by: 'name',
+    sort_order: 'asc',
+  }), [searchTerm, filterStatus, filterCountry]);
+
+  const { data: customersResponse, isLoading } = useQuery({
+    queryKey: [queryKeys.customers, customerFilters],
+    queryFn: () => apiClient.getCustomers(customerFilters),
+  });
+
+  const customers: Customer[] = useMemo(() => {
+    return (customersResponse?.items || []).map((customer) => {
+      const credentials = Array.isArray(customer.credentials) ? customer.credentials : [];
+      const mappedCredentials: Credential[] = credentials.map((cred: any, index: number) => ({
+        id: cred.id || cred.number || `${customer.id}-cred-${index}`,
+        type: cred.type || 'Credential',
+        number: cred.number || 'N/A',
+        issuedDate: cred.issued_date ? new Date(cred.issued_date) : undefined,
+        expiryDate: cred.expiry_date ? new Date(cred.expiry_date) : undefined,
+        fileUrl: cred.file_url,
+        status: cred.status || 'valid',
+      }));
+
+      const totalOrders = customer.total_orders || 0;
+      const totalValue = customer.total_value || 0;
+      const averageOrderValue = totalOrders ? totalValue / totalOrders : 0;
+
+      return {
+        id: customer.id,
+        name: customer.name,
+        primaryContactName: customer.primary_contact_name,
+        primaryContactPhone: customer.primary_contact_phone || 'N/A',
+        email: customer.email || 'N/A',
+        addressText: customer.address_text || '',
+        latitude: customer.latitude || 0,
+        longitude: customer.longitude || 0,
+        country: customer.country || 'Unknown',
+        province: customer.province || '',
+        district: customer.district || '',
+        credentials: mappedCredentials,
+        status: customer.status,
+        createdBy: customer.created_by || 'system',
+        createdAt: customer.created_at ? new Date(customer.created_at) : new Date(),
+        updatedAt: customer.updated_at ? new Date(customer.updated_at) : new Date(),
+        totalOrders,
+        totalValue,
+        lastOrderDate: customer.last_order_date ? new Date(customer.last_order_date) : undefined,
+        averageOrderValue,
+        paymentHistory: 'good',
+      };
+    });
+  }, [customersResponse]);
 
   // Filter customers
   const filteredCustomers = useMemo(() => {
@@ -327,6 +235,15 @@ export default function CustomerManagement({ onNewCustomer }: CustomerManagement
   const openInsights = (customerId: string) => {
     setInsightCustomerId(customerId);
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-900">Customer Management</h2>
+        <p className="text-gray-600 mt-2">Loading customers and recent activity...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

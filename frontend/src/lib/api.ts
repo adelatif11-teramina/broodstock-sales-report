@@ -432,6 +432,28 @@ export class ApiClient {
     return response.data!.customer;
   }
 
+  async getCustomerOrders(
+    customerId: string,
+    params: Record<string, string | number | undefined> = {}
+  ): Promise<PaginatedResponse<Order>> {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, String(value));
+      }
+    });
+
+    const response = await this.request<{
+      orders: Order[];
+      pagination: PaginatedResponse<Order>['pagination'];
+    }>(`/orders/customer/${customerId}?${searchParams}`);
+
+    return {
+      items: response.data!.orders,
+      pagination: response.data!.pagination,
+    };
+  }
+
   async createCustomer(data: Partial<Customer>): Promise<Customer> {
     const response = await this.request<{ customer: Customer }>('/customers', {
       method: 'POST',

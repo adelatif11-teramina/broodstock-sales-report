@@ -19,6 +19,8 @@ A comprehensive sales reporting platform for aquaculture broodstock sales with e
 - **Project Structure**: Next.js 14 with app router and TypeScript
 - **Dependencies**: MapLibre GL, Recharts, React Query, React Hook Form, Zod
 - **Development Tools**: ESLint, Prettier, Turbopack for fast builds
+- **Customer Management**: Live customer list (table/cards) wired to the API plus a slide-out insight panel that now includes paginated historical transactions per customer
+- **Google Sheets Sync**: One-way, manual-trigger import from Google Sheets (insert-only with validation, auth-protected) for customers/orders/batches
 
 #### DevOps & Infrastructure
 - **Docker Environment**: Complete containerization for development and production

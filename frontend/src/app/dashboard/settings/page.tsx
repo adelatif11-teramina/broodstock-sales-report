@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Shield, Bell, Globe, Database, Key, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Shield, Bell, Globe, Database, Key, Save, Eye, EyeOff, FileSpreadsheet } from 'lucide-react';
 import { profileAPI, passwordAPI, notificationsAPI, systemAPI } from '../../../services/settings';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import GoogleSheetsSync from '@/components/settings/GoogleSheetsSync';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'system'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'system' | 'sync'>('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -101,6 +102,7 @@ export default function SettingsPage() {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'system', label: 'System', icon: Database },
+    { id: 'sync', label: 'Google Sheets Sync', icon: FileSpreadsheet },
   ];
 
   const handleInputChange = (field: string, value: any) => {
@@ -505,6 +507,11 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Google Sheets Sync Tab */}
+          {activeTab === 'sync' && (
+            <GoogleSheetsSync />
           )}
         </div>
       </div>

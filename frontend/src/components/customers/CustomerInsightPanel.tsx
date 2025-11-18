@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import Button from '@/components/ui/Button';
 import { apiClient, CustomerAnalytics, TimelineEventSeverity } from '@/lib/api';
 import { queryKeys } from '@/lib/queryClient';
@@ -106,6 +106,28 @@ export default function CustomerInsightPanel({ customer, onClose }: CustomerInsi
     enabled: Boolean(customer.id),
   });
 
+  const {
+    data: customerOrders,
+    isLoading: ordersLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: queryKeys.customerOrders(customer.id),
+    queryFn: ({ pageParam = 0 }) =>
+      apiClient.getCustomerOrders(customer.id, {
+        limit: 10,
+        offset: pageParam,
+        sort_by: 'order_date',
+        sort_order: 'desc',
+      }),
+    getNextPageParam: (lastPage) => {
+      const nextOffset = lastPage.pagination.offset + lastPage.pagination.limit;
+      return nextOffset < lastPage.pagination.total ? nextOffset : undefined;
+    },
+    enabled: Boolean(customer.id),
+  });
+
   const lastOrderDescription = useMemo(() => {
     if (data?.summary.lastOrderDate) {
       return `${formatDate(data.summary.lastOrderDate)} • ${formatRelativeTime(new Date(data.summary.lastOrderDate))}`;
@@ -117,6 +139,11 @@ export default function CustomerInsightPanel({ customer, onClose }: CustomerInsi
   }, [data?.summary.lastOrderDate, customer.lastOrderDate]);
 
   const retentionNote = data ? retentionCopy[data.summary.retentionRisk] : 'Review recent engagement';
+
+  const historicalOrders = useMemo(
+    () => customerOrders?.pages.flatMap((page) => page.items) || [],
+    [customerOrders]
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -277,6 +304,59 @@ export default function CustomerInsightPanel({ customer, onClose }: CustomerInsi
                     </div>
                   )}
                 </div>
+              </Section>
+
+              <Section title="Historical Transactions">
+                <div className="space-y-3">
+                  {ordersLoading && (
+                    <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
+                      Loading customer orders...
+                    </div>
+                  )}
+                  {!ordersLoading && historicalOrders.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
+                      No historical transactions found.
+                    </div>
+                  )}
+                  {historicalOrders.map((order) => (
+                    <div key={order.id} className="rounded-lg border border-gray-200 p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{order.order_number}</div>
+                          <div className="text-xs text-gray-500">
+                            {formatDate(order.order_date)} · {order.species}
+                          </div>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(order.total_value)} {order.total_value_currency}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="rounded-full px-2 py-0.5 font-medium bg-gray-100 text-gray-700">
+                          {formatNumber(order.quantity)} units
+                        </span>
+                        <span className={cn('rounded-full px-2 py-0.5 font-medium', getStatusColor(order.shipment_status))}>
+                          {formatStatus(order.shipment_status)}
+                        </span>
+                        <span className={cn('rounded-full px-2 py-0.5 font-medium', getStatusColor(order.quality_flag))}>
+                          {formatStatus(order.quality_flag)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {hasNextPage && (
+                  <div className="mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                    >
+                      {isFetchingNextPage ? 'Loading...' : 'Load more'}
+                    </Button>
+                  </div>
+                )}
               </Section>
 
               <Section title="Timeline">
