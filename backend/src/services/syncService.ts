@@ -165,7 +165,7 @@ export class SyncService {
           customer_errors: allErrors.filter(e => e.entityType === 'customer').length,
           order_errors: allErrors.filter(e => e.entityType === 'order').length,
           batch_errors: allErrors.filter(e => e.entityType === 'broodstock_batch').length,
-        },
+        } as Record<string, number>,
       });
 
       console.log(`✅ Sync job ${syncJobId} completed: ${totalInserted} inserted, ${allErrors.length} errors`);

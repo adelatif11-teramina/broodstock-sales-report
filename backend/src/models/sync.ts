@@ -62,7 +62,7 @@ export const UpdateSyncJobSchema = z.object({
   customers_inserted: z.number().int().min(0).optional(),
   orders_inserted: z.number().int().min(0).optional(),
   batches_inserted: z.number().int().min(0).optional(),
-  error_summary: z.record(z.number()).optional(),
+  error_summary: z.record(z.string(), z.number()).optional(),
   error_message: z.string().optional(),
 });
 
@@ -91,7 +91,7 @@ export const CreateSyncErrorSchema = z.object({
   error_message: z.string().min(1),
   field_name: z.string().max(100).optional(),
   invalid_value: z.string().optional(),
-  data_snapshot: z.record(z.any()),
+  data_snapshot: z.record(z.string(), z.any()),
 });
 
 export const SyncErrorFilterSchema = z.object({
@@ -113,7 +113,7 @@ export const CreateSyncAuditLogSchema = z.object({
   entity_id: z.string().uuid(),
   action: z.enum(['insert', 'update', 'skip']).default('insert'),
   row_number: z.number().int().min(1),
-  data_snapshot: z.record(z.any()).optional(),
+  data_snapshot: z.record(z.string(), z.any()).optional(),
 });
 
 // ==============================================================================

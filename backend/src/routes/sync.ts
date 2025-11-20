@@ -64,14 +64,14 @@ router.get('/google-sheets/status/:jobId', async (req: Request, res: Response) =
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: syncJob,
     });
   } catch (error: any) {
     console.error('Get sync status error:', error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message || 'Failed to get sync status',
     });

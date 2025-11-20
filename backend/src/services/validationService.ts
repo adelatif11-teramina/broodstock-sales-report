@@ -422,9 +422,9 @@ export class ValidationService {
 
     // Parse Zod errors for better error messages
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      fieldName = firstError.path.join('.');
-      invalidValue = String(dataSnapshot[fieldName] || '');
+      const firstError = error.issues[0];
+      fieldName = firstError?.path?.join('.') || '';
+      invalidValue = fieldName ? String(dataSnapshot[fieldName] || '') : '';
       errorMessage = `${fieldName}: ${firstError.message}`;
       errorType = 'type_error';
     } else if (error.message.includes('must be')) {
